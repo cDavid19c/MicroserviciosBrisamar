@@ -159,7 +159,8 @@ var app = builder.Build();
 // MIDDLEWARE
 // =======================
 if (app.Environment.IsDevelopment()
-    || app.Environment.EnvironmentName == "Docker")
+    || app.Environment.EnvironmentName == "Docker"
+    || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -188,7 +189,5 @@ app.UseAuthorization();
 // =======================
 app.MapControllers();
 app.MapReverseProxy();
-
-app.Urls.Add("http://0.0.0.0:8080");
 
 app.Run();

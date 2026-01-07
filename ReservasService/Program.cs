@@ -9,12 +9,24 @@ var builder = WebApplication.CreateBuilder(args);
 
 //
 // =======================
+// CONFIGURATION
+// =======================
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddJsonFile("appsettings.Docker.json", optional: true)
+    .AddEnvironmentVariables();
+
+//
+// =======================
 // Kestrel – gRPC HTTP/2
 // =======================
-// OBLIGATORIO para gRPC en Docker
+// Usar puerto dinámico de Render ($PORT)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(8080, listenOptions =>
+    options.ListenAnyIP(int.Parse(port), listenOptions =>
     {
         listenOptions.Protocols = HttpProtocols.Http2;
     });

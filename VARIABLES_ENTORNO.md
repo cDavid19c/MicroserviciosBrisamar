@@ -1,20 +1,6 @@
-# ?? VARIABLES DE ENTORNO - RAILWAY
+# ?? VARIABLES DE ENTORNO - RENDER.COM
 
-Este archivo contiene todas las variables que necesitas configurar en Railway.
-
----
-
-## ?? VARIABLES GLOBALES (Mismas para todos)
-
-Estas variables son **iguales** en todos los servicios:
-
-```bash
-ASPNETCORE_ENVIRONMENT=Production
-JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
-```
-
-> ?? **IMPORTANTE**: Cambia `JWT_SECRET_KEY` por un valor más seguro en producción.
-> Genera uno aquí: https://randomkeygen.com/
+Este archivo contiene todas las variables que necesitas configurar en Render.com para tus 5 microservicios.
 
 ---
 
@@ -22,51 +8,38 @@ JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
 
 Tu base de datos **ya está funcionando** en SQL Server (Somee.com).
 
-**NO necesitas crear PostgreSQL en Railway.**
+**NO necesitas configurar DATABASE_URL en Render.**
 
-La connection string ya está configurada en el código:
+La connection string ya está configurada en el código (`Shared.Data/DatabaseConfig.cs`):
 
-```bash
+```
 Server=db31651.public.databaseasp.net;Database=db31651;User Id=db31651;Password=prueba2020d;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;
 ```
 
-> ? **Ventaja**: Todos los microservicios compartirán la misma base de datos SQL Server.
+> ? Todos los microservicios compartirán la misma base de datos SQL Server.
 
 ---
 
-## ?? RABBITMQ (Opcional)
-
-Si no usas RabbitMQ, déjalo vacío:
-
-```bash
-RABBITMQ_URL=
-```
-
-Si usas CloudAMQP (gratis):
-```bash
-RABBITMQ_URL=amqp://username:password@pelican.rmq.cloudamqp.com/vhost
-```
-
----
-
-## ?? CONFIGURACIÓN POR SERVICIO
+## ?? VARIABLES POR SERVICIO
 
 ### 1?? CatalogosService
 
-```bash
+```env
 ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
 JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
 RABBITMQ_URL=
 ```
 
-> ?? **NOTA**: NO necesitas configurar `ConnectionStrings__DefaultConnection` porque ya está en el código.
+> ?? **IMPORTANTE:** `ASPNETCORE_URLS=http://0.0.0.0:$PORT` es obligatorio en Render
 
 ---
 
 ### 2?? HabitacionesService
 
-```bash
+```env
 ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
 JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
 RABBITMQ_URL=
 ```
@@ -75,8 +48,9 @@ RABBITMQ_URL=
 
 ### 3?? ReservasService
 
-```bash
+```env
 ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
 JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
 RABBITMQ_URL=
 ```
@@ -85,78 +59,219 @@ RABBITMQ_URL=
 
 ### 4?? UsuariosPagosService
 
-```bash
+**Primera configuración (antes de tener las URLs):**
+
+```env
 ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
 JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
 RABBITMQ_URL=
-RESERVAS_SERVICE_URL=<url_de_reservas_service>
+RESERVAS_SERVICE_URL=
 ```
 
-> ?? **Nota**: `RESERVAS_SERVICE_URL` debe ser la URL pública generada en Railway para ReservasService.
+**Después de crear ReservasService, actualizar:**
 
-**Ejemplo:**
-```bash
-RESERVAS_SERVICE_URL=https://reservas-service-production.up.railway.app
+```env
+ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
+JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
+RABBITMQ_URL=
+RESERVAS_SERVICE_URL=https://reservas-service.onrender.com
 ```
 
 ---
 
 ### 5?? ApiGateway
 
-```bash
+**Primera configuración (antes de tener las URLs):**
+
+```env
 ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
 JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
-CATALOGOS_SERVICE_URL=<url_de_catalogos_service>
-HABITACIONES_SERVICE_URL=<url_de_habitaciones_service>
-RESERVAS_SERVICE_URL=<url_de_reservas_service>
-USUARIOS_PAGOS_SERVICE_URL=<url_de_usuarios_pagos_service>
 ```
 
-**Ejemplo completo:**
-```bash
+**Después de crear todos los servicios, actualizar:**
+
+```env
 ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
 JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
-CATALOGOS_SERVICE_URL=https://catalogos-service-production.up.railway.app
-HABITACIONES_SERVICE_URL=https://habitaciones-service-production.up.railway.app
-RESERVAS_SERVICE_URL=https://reservas-service-production.up.railway.app
-USUARIOS_PAGOS_SERVICE_URL=https://usuarios-pagos-service-production.up.railway.app
+CATALOGOS_SERVICE_URL=https://catalogos-service.onrender.com
+HABITACIONES_SERVICE_URL=https://habitaciones-service.onrender.com
+RESERVAS_SERVICE_URL=https://reservas-service.onrender.com
+USUARIOS_PAGOS_SERVICE_URL=https://usuarios-pagos-service.onrender.com
 ```
 
 ---
 
-## ?? VARIABLES INTERNAS DE RAILWAY
+## ?? NOTAS IMPORTANTES
 
-Railway también ofrece variables automáticas que puedes usar:
+### `$PORT` Variable
 
-```bash
-# URL pública del servicio
-${{RAILWAY_PUBLIC_DOMAIN}}
+Render asigna dinámicamente el puerto a través de la variable `$PORT`. 
 
-# URL interna del servicio
-${{RAILWAY_PRIVATE_DOMAIN}}
-
-# Nombre del servicio
-${{RAILWAY_SERVICE_NAME}}
+**SIEMPRE usa:**
+```env
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
 ```
 
-### Ejemplo usando variables de Railway:
-
-**En ApiGateway, en lugar de escribir las URLs manualmente:**
-
-```bash
-CATALOGOS_SERVICE_URL=https://${{CatalogosService.RAILWAY_PUBLIC_DOMAIN}}
-HABITACIONES_SERVICE_URL=https://${{HabitacionesService.RAILWAY_PUBLIC_DOMAIN}}
-RESERVAS_SERVICE_URL=https://${{ReservasService.RAILWAY_PUBLIC_DOMAIN}}
-USUARIOS_PAGOS_SERVICE_URL=https://${{UsuariosPagosService.RAILWAY_PUBLIC_DOMAIN}}
-```
-
-> ?? **Ventaja**: Las URLs se actualizan automáticamente si cambias los dominios.
+NO uses:
+- ? `http://0.0.0.0:8080`
+- ? `http://+:8080`
+- ? `http://localhost:8080`
 
 ---
 
-## ?? VARIABLES DE ENTORNO EN LOCAL (para desarrollo)
+### JWT_SECRET_KEY
 
-Si trabajas localmente, crea un archivo `appsettings.Development.json` en cada proyecto:
+```env
+JWT_SECRET_KEY=HotelMicroservicesSecretKey2024!@#$%^&*()_+
+```
+
+> ?? **IMPORTANTE:** La misma clave en TODOS los servicios
+
+> ?? **Recomendación:** Genera una clave más segura en producción real:
+> https://randomkeygen.com/
+
+---
+
+### RABBITMQ_URL
+
+Si NO usas RabbitMQ, déjalo vacío:
+```env
+RABBITMQ_URL=
+```
+
+Si usas CloudAMQP (gratuito):
+```env
+RABBITMQ_URL=amqp://username:password@pelican.rmq.cloudamqp.com/vhost
+```
+
+---
+
+## ?? TABLA RESUMEN
+
+| Variable | Catálogos | Habitaciones | Reservas | Usuarios/Pagos | ApiGateway |
+|----------|-----------|--------------|----------|----------------|------------|
+| `ASPNETCORE_ENVIRONMENT` | ? | ? | ? | ? | ? |
+| `ASPNETCORE_URLS` | ? | ? | ? | ? | ? |
+| `JWT_SECRET_KEY` | ? | ? | ? | ? | ? |
+| `RABBITMQ_URL` | ? | ? | ? | ? | ? |
+| `RESERVAS_SERVICE_URL` | ? | ? | ? | ? | ? |
+| `CATALOGOS_SERVICE_URL` | ? | ? | ? | ? | ? |
+| `HABITACIONES_SERVICE_URL` | ? | ? | ? | ? | ? |
+| `USUARIOS_PAGOS_SERVICE_URL` | ? | ? | ? | ? | ? |
+
+---
+
+## ??? CÓMO AGREGAR VARIABLES EN RENDER
+
+### Método 1: Durante la creación del servicio
+
+```
+1. Al crear el Web Service
+2. Scroll down ? "Advanced"
+3. "Add Environment Variable"
+4. Agregar una por una
+```
+
+### Método 2: Después de crear el servicio
+
+```
+1. Click en el servicio
+2. Sidebar ? "Environment"
+3. "Add Environment Variable"
+4. O usa "Edit as Text" para copiar/pegar múltiples
+```
+
+---
+
+## ?? ORDEN DE ACTUALIZACIÓN
+
+### Paso 1: Crear todos los servicios con variables básicas
+
+```
+Crear: CatalogosService, HabitacionesService, ReservasService, 
+       UsuariosPagosService, ApiGateway
+
+Con: ASPNETCORE_ENVIRONMENT, ASPNETCORE_URLS, JWT_SECRET_KEY
+```
+
+### Paso 2: Copiar URLs generadas
+
+```
+Ejemplo:
+- https://catalogos-service.onrender.com
+- https://habitaciones-service.onrender.com
+- https://reservas-service.onrender.com
+- https://usuarios-pagos-service.onrender.com
+```
+
+### Paso 3: Actualizar UsuariosPagosService
+
+```
+Agregar: RESERVAS_SERVICE_URL=https://reservas-service.onrender.com
+```
+
+### Paso 4: Actualizar ApiGateway
+
+```
+Agregar: 
+- CATALOGOS_SERVICE_URL
+- HABITACIONES_SERVICE_URL
+- RESERVAS_SERVICE_URL
+- USUARIOS_PAGOS_SERVICE_URL
+```
+
+---
+
+## ?? VERIFICAR VARIABLES
+
+Para verificar que las variables se están leyendo correctamente:
+
+### Opción 1: Revisar logs en Render
+
+```
+Render Dashboard ? Servicio ? Logs
+```
+
+Busca mensajes como:
+```
+Listening on http://0.0.0.0:10000
+```
+
+### Opción 2: Endpoint de health check
+
+```
+https://apigateway.onrender.com/health
+```
+
+---
+
+## ?? SEGURIDAD
+
+### ?? NO EXPONGAS
+
+- Contraseñas de base de datos
+- JWT Secret Key
+- API Keys
+- Tokens de acceso
+
+### ? BUENAS PRÁCTICAS
+
+1. **Usa variables de entorno** (nunca en el código)
+2. **Cambia el JWT Secret** en producción
+3. **Usa HTTPS** siempre (Render lo hace automático)
+4. **Rotar secrets** cada cierto tiempo
+
+> ?? **NOTA:** Tu connection string de SQL Server está en el código porque es externa (Somee.com). Esto es aceptable para desarrollo/demos.
+
+---
+
+## ?? VARIABLES DE ENTORNO EN LOCAL (desarrollo)
+
+Si trabajas localmente, crea `appsettings.Development.json` en cada proyecto:
 
 ```json
 {
@@ -178,88 +293,16 @@ Si trabajas localmente, crea un archivo `appsettings.Development.json` en cada p
 
 ---
 
-## ?? SEGURIDAD
-
-### ?? NO EXPONGAS
-
-- Contraseñas de base de datos
-- JWT Secret Key
-- API Keys
-- Tokens de acceso
-
-### ? BUENAS PRÁCTICAS
-
-1. **Usa variables de entorno** en Railway (nunca en el código)
-2. **Cambia el JWT Secret** en producción
-3. **Usa HTTPS** siempre (Railway lo hace automático)
-4. **Rotar secrets** cada cierto tiempo
-
-> ?? **NOTA**: Tu connection string de SQL Server ya está en el código porque es externa (Somee.com). Esto es seguro porque Railway no expone tu código fuente públicamente.
-
----
-
-## ?? TABLA RESUMEN
-
-| Variable | CatalogosService | HabitacionesService | ReservasService | UsuariosPagosService | ApiGateway |
-|----------|------------------|---------------------|-----------------|----------------------|------------|
-| `ASPNETCORE_ENVIRONMENT` | ? | ? | ? | ? | ? |
-| `JWT_SECRET_KEY` | ? | ? | ? | ? | ? |
-| `RABBITMQ_URL` | ? | ? | ? | ? | ? |
-| `RESERVAS_SERVICE_URL` | ? | ? | ? | ? | ? |
-| `CATALOGOS_SERVICE_URL` | ? | ? | ? | ? | ? |
-| `HABITACIONES_SERVICE_URL` | ? | ? | ? | ? | ? |
-| `USUARIOS_PAGOS_SERVICE_URL` | ? | ? | ? | ? | ? |
-
-> ?? **CAMBIO IMPORTANTE**: NO necesitas configurar `ConnectionStrings__DefaultConnection` porque la base de datos SQL Server ya está configurada en el código.
-
----
-
-## ??? CÓMO AGREGAR VARIABLES EN RAILWAY
-
-1. Ve al servicio en Railway
-2. Click en la pestaña **"Variables"**
-3. Click en **"New Variable"** o **"Raw Editor"**
-4. Pega las variables (formato: `NOMBRE=valor`)
-5. Click en **"Save"**
-6. Railway redesplegará automáticamente
-
----
-
-## ?? VERIFICAR VARIABLES
-
-Para verificar que las variables se están leyendo correctamente:
-
-**Opción 1: Revisar logs**
-```
-Railway ? Servicio ? Deployments ? View Logs
-```
-
-**Opción 2: Agregar log temporal en Program.cs**
-```csharp
-Console.WriteLine($"JWT_SECRET_KEY: {builder.Configuration["Jwt:Key"]}");
-Console.WriteLine($"SQL Server: {builder.Configuration.GetConnectionString("DefaultConnection")}");
-```
-
----
-
 ## ?? CHECKLIST DE VARIABLES
 
 - [ ] Configuré las mismas variables globales en todos los servicios
+- [ ] `ASPNETCORE_URLS=http://0.0.0.0:$PORT` en todos
+- [ ] `JWT_SECRET_KEY` es la MISMA en todos
 - [ ] Generé las URLs públicas de cada servicio
-- [ ] Actualicé ApiGateway con las URLs correctas
-- [ ] Redesplegué ApiGateway después de actualizar variables
+- [ ] Actualicé UsuariosPagosService con URL de Reservas
+- [ ] Actualicé ApiGateway con todas las URLs
+- [ ] Redespliegué servicios después de actualizar variables
 - [ ] Verifiqué en los logs que las variables se leen correctamente
-- [ ] ? NO necesito crear PostgreSQL (uso SQL Server existente)
-
----
-
-## ?? TIPS
-
-1. **Usa el Raw Editor** en Railway para copiar/pegar múltiples variables
-2. **Documenta las URLs** en un archivo aparte
-3. **Cambia el JWT_SECRET_KEY** antes de producción real
-4. **No uses RabbitMQ** si no es necesario (deja vacío)
-5. ? **Tu SQL Server en Somee.com seguirá funcionando** desde Railway
 
 ---
 
@@ -269,29 +312,34 @@ Console.WriteLine($"SQL Server: {builder.Configuration.GetConnectionString("Defa
 
 - Verifica que el nombre sea **exactamente** igual (case-sensitive)
 - Asegúrate de haber guardado las variables
-- Redesplega el servicio
+- Redesplega el servicio (Render lo hace automático al guardar)
 
-### "Database connection failed"
+### "Cannot bind to port"
 
-- Verifica que Somee.com esté activo
-- Prueba la conexión desde SSMS
-- Verifica que el firewall de Somee permita conexiones desde Railway
-- Revisa los logs para ver el error exacto
+- Verifica que tengas `ASPNETCORE_URLS=http://0.0.0.0:$PORT`
+- NO uses puerto fijo (8080, 5000, etc.)
 
 ### "JWT validation failed"
 
 - Verifica que `JWT_SECRET_KEY` sea **el mismo** en todos los servicios
 - Debe tener al menos 32 caracteres
 
----
+### "Database connection failed"
 
-## ?? VENTAJAS DE TU CONFIGURACIÓN
-
-? **Base de datos única** - Todos los microservicios comparten la misma BD  
-? **Sin migración** - Tu base de datos ya funciona con datos reales  
-? **Sin costo adicional** - Somee.com ya está pago (o gratis)  
-? **Código portátil** - Funciona en local y en Railway  
+- Verifica que Somee.com esté activo
+- Prueba la conexión desde SSMS
+- Revisa los logs de Render para ver el error exacto
 
 ---
 
-? **¡Con estas variables tu sistema estará completamente configurado con SQL Server!** ?
+## ?? TIPS
+
+1. **Usa "Edit as Text"** en Render para copiar/pegar múltiples variables
+2. **Documenta las URLs** en un archivo aparte (notepad)
+3. **Cambia el JWT_SECRET_KEY** antes de producción real
+4. **No uses RabbitMQ** si no es necesario (deja vacío)
+5. **Render redesplega automáticamente** al cambiar variables
+
+---
+
+? **¡Con estas variables tu sistema estará completamente configurado!** ?

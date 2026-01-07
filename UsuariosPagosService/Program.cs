@@ -140,12 +140,21 @@ builder.Services.AddHostedService<RabbitMqConsumersHostedService>();
 // =======================
 // gRPC CLIENT
 // =======================
+var reservasUrl = builder.Configuration["RESERVAS_SERVICE_URL"];
+
+if (string.IsNullOrWhiteSpace(reservasUrl))
+{
+    reservasUrl = builder.Environment.IsDevelopment()
+        ? "http://localhost:5003"
+        : "http://reservas:8080";
+}
+
+// Asegurar que la URL no termine con /
+reservasUrl = reservasUrl.TrimEnd('/');
+
 builder.Services.AddGrpcClient<ReservasGrpc.ReservasGrpcClient>(options =>
 {
-    options.Address = new Uri(
-        builder.Environment.IsDevelopment()
-            ? "http://localhost:5003"
-            : "http://reservas:8080");
+    options.Address = new Uri(reservasUrl);
 });
 
 //
@@ -173,7 +182,8 @@ var app = builder.Build();
 // MIDDLEWARE
 // =======================
 if (app.Environment.IsDevelopment()
-    || app.Environment.EnvironmentName == "Docker")
+    || app.Environment.EnvironmentName == "Docker"
+    || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
