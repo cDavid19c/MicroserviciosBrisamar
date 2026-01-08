@@ -4,8 +4,9 @@ using Microsoft.OpenApi.Models;
 using ReservasService.Protos;
 using Shared.Data;
 using Shared.EventBus;
-using UsuariosPagosService.Consumers;
 using System.Text;
+using UsuariosPagosService.Consumers;
+using UsuariosPagosService.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,6 +100,7 @@ builder.Services.AddScoped<UsuarioRepository>();
 builder.Services.AddScoped<PagoRepository>();
 builder.Services.AddScoped<FacturaRepository>();
 builder.Services.AddScoped<PdfRepository>();
+builder.Services.AddScoped<FuncionesEspecialesRepository>();
 
 //
 // =======================
