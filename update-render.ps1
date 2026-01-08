@@ -19,7 +19,7 @@ Write-Host ""
 
 # 2. Commit
 Write-Host "[2/4] Creando commit..." -ForegroundColor Yellow
-$mensaje = "Fix: Eliminar puerto hardcodeado en ApiGateway para Render"
+$mensaje = "Fix: JWT configuracion fallback para JWT_SECRET_KEY"
 git commit -m $mensaje
 
 if ($LASTEXITCODE -ne 0) {
@@ -52,11 +52,19 @@ Write-Host ""
 Write-Host "?? Monitorea el progreso en:" -ForegroundColor White
 Write-Host "   https://dashboard.render.com" -ForegroundColor Blue
 Write-Host ""
-Write-Host "?? Verifica los logs de 'apigateway-hyaw'" -ForegroundColor White
-Write-Host "   Busca: 'Now listening on: http://0.0.0.0:10000'" -ForegroundColor Green
+Write-Host "?? Servicios que se redespliegan:" -ForegroundColor White
+Write-Host "   - ApiGateway" -ForegroundColor Yellow
+Write-Host "   - UsuariosPagosService" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "?? Después prueba:" -ForegroundColor White
-Write-Host "   https://apigateway-hyaw.onrender.com/swagger" -ForegroundColor Blue
+Write-Host "?? Después del redespliegue:" -ForegroundColor White
+Write-Host "   1. Genera nuevo token en ApiGateway" -ForegroundColor Cyan
+Write-Host "   2. Copia el token" -ForegroundColor Cyan
+Write-Host "   3. Authoriza en UsuariosPagosService Swagger" -ForegroundColor Cyan
+Write-Host "   4. Prueba GET /api/usuarios" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "?? URLs:" -ForegroundColor White
+Write-Host "   ApiGateway:          https://apigateway-hyaw.onrender.com/swagger" -ForegroundColor Blue
+Write-Host "   UsuariosPagosService: https://usuarios-pagos-service.onrender.com/swagger" -ForegroundColor Blue
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host " ? ACTUALIZACIÓN COMPLETA" -ForegroundColor Green

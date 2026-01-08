@@ -61,9 +61,15 @@ builder.Services.AddSwaggerGen(c =>
 // =======================
 // JWT
 // =======================
-var jwtKey = builder.Configuration["Jwt:Key"]!;
-var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
-var jwtAudience = builder.Configuration["Jwt:Audience"]!;
+var jwtKey = builder.Configuration["Jwt:Key"] 
+             ?? builder.Configuration["JWT_SECRET_KEY"]
+             ?? "HotelMicroservicesSecretKey2024!@#$%^&*()_+";
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+                ?? "HotelMicroservices";
+
+var jwtAudience = builder.Configuration["Jwt:Audience"]
+                  ?? "HotelMicroservicesClients";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

@@ -51,9 +51,15 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var jwtKey = _configuration["Jwt:Key"] ?? "HotelMicroservicesSecretKey2024!@#$%^&*()_+";
-            var jwtIssuer = _configuration["Jwt:Issuer"] ?? "HotelMicroservices";
-            var jwtAudience = _configuration["Jwt:Audience"] ?? "HotelMicroservicesClients";
+            var jwtKey = _configuration["Jwt:Key"] 
+                         ?? _configuration["JWT_SECRET_KEY"]
+                         ?? "HotelMicroservicesSecretKey2024!@#$%^&*()_+";
+            
+            var jwtIssuer = _configuration["Jwt:Issuer"] 
+                            ?? "HotelMicroservices";
+            
+            var jwtAudience = _configuration["Jwt:Audience"] 
+                              ?? "HotelMicroservicesClients";
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(jwtKey);
@@ -95,9 +101,15 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var jwtKey = _configuration["Jwt:Key"] ?? "HotelMicroservicesSecretKey2024!@#$%^&*()_+";
-            var jwtIssuer = _configuration["Jwt:Issuer"] ?? "HotelMicroservices";
-            var jwtAudience = _configuration["Jwt:Audience"] ?? "HotelMicroservicesClients";
+            var jwtKey = _configuration["Jwt:Key"] 
+                         ?? _configuration["JWT_SECRET_KEY"]
+                         ?? "HotelMicroservicesSecretKey2024!@#$%^&*()_+";
+            
+            var jwtIssuer = _configuration["Jwt:Issuer"] 
+                            ?? "HotelMicroservices";
+            
+            var jwtAudience = _configuration["Jwt:Audience"] 
+                              ?? "HotelMicroservicesClients";
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(jwtKey);
@@ -135,9 +147,16 @@ public class AuthController : ControllerBase
 
     private string GenerateJwtToken(string username, string role)
     {
-        var jwtKey = _configuration["Jwt:Key"] ?? "HotelMicroservicesSecretKey2024!@#$%^&*()_+";
-        var jwtIssuer = _configuration["Jwt:Issuer"] ?? "HotelMicroservices";
-        var jwtAudience = _configuration["Jwt:Audience"] ?? "HotelMicroservicesClients";
+        var jwtKey = _configuration["Jwt:Key"] 
+                     ?? _configuration["JWT_SECRET_KEY"]
+                     ?? "HotelMicroservicesSecretKey2024!@#$%^&*()_+";
+        
+        var jwtIssuer = _configuration["Jwt:Issuer"] 
+                        ?? "HotelMicroservices";
+        
+        var jwtAudience = _configuration["Jwt:Audience"] 
+                          ?? "HotelMicroservicesClients";
+        
         var expireMinutes = int.Parse(_configuration["Jwt:ExpireMinutes"] ?? "60");
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
