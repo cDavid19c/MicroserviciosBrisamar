@@ -77,6 +77,13 @@ public class UsuarioRepository
         var now = DateTime.Now;
 
         await using var cn = new SqlConnection(_connectionString);
+        await cn.OpenAsync();
+
+        // Obtener el siguiente ID disponible
+        await using var cmdNextId = new SqlCommand(
+            "SELECT ISNULL(MAX(ID_UNICO_USUARIO), 0) + 1 FROM USUARIO", cn);
+        var nextId = (int)(await cmdNextId.ExecuteScalarAsync() ?? 1);
+
         await using var cmd = new SqlCommand(@"
             INSERT INTO USUARIO
             (
@@ -93,8 +100,8 @@ public class UsuarioRepository
                 @FECHA_MOD, @ESTADO
             )", cn);
 
-        cmd.Parameters.Add("@ID", SqlDbType.Int).Value = dto.Id;
-        cmd.Parameters.Add("@ROL", SqlDbType.Int).Value = dto.IdRol;
+        cmd.Parameters.Add("@ID", SqlDbType.Int).Value = nextId;
+        cmd.Parameters.Add("@ROL", SqlDbType.Int).Value = dto.IdRol > 0 ? dto.IdRol : 1;
         cmd.Parameters.Add("@NOMBRE", SqlDbType.VarChar, 200).Value = (object?)dto.Nombre ?? DBNull.Value;
         cmd.Parameters.Add("@APELLIDO", SqlDbType.VarChar, 200).Value = (object?)dto.Apellido ?? DBNull.Value;
         cmd.Parameters.Add("@CORREO", SqlDbType.VarChar, 200).Value = (object?)dto.Correo ?? DBNull.Value;
@@ -105,9 +112,9 @@ public class UsuarioRepository
         cmd.Parameters.Add("@FECHA_MOD", SqlDbType.DateTime).Value = now;
         cmd.Parameters.Add("@ESTADO", SqlDbType.Bit).Value = dto.Estado;
 
-        await cn.OpenAsync();
         await cmd.ExecuteNonQueryAsync();
 
+        dto.Id = nextId;
         dto.FechaModificacion = now;
         return dto;
     }
