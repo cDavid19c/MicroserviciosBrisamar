@@ -25,8 +25,15 @@ public class ReservasGrpcGatewayController : ControllerBase
 
     private ReservasGrpc.ReservasGrpcClient GetGrpcClient()
     {
-        var grpcUrl = _config["GrpcServices:ReservasService"] 
+        // Primero intentar leer de la configuración
+        var grpcUrl = _config["GrpcServices:ReservasService"];
+        
+        // Si no está configurado o contiene placeholder ${}, leer de variable de entorno directamente
+        if (string.IsNullOrEmpty(grpcUrl) || grpcUrl.Contains("${"))
+        {
+            grpcUrl = Environment.GetEnvironmentVariable("RESERVAS_SERVICE_URL") 
                       ?? "https://reservas-service.onrender.com";
+        }
         
         _logger.LogInformation("Connecting to gRPC service at: {Url}", grpcUrl);
         
