@@ -365,25 +365,37 @@ public class ReservasGrpcGatewayController : ControllerBase
             _logger.LogInformation("Processing {ReservasCount} reservas and {HabxResCount} habxres for room {Id}", 
                 reservas.Count, habxres.Count, idHabitacion);
             
-            // Crear índice de HabxRes por IdReserva
-            var habxresDict = habxres.ToDictionary(h => h.IdReserva, h => h);
+            // Filtrar HabxRes solo para esta habitación
+            var habxresHabitacion = habxres
+                .Where(h => h.IdHabitacion == idHabitacion)
+                .Select(h => h.IdReserva)
+                .ToHashSet();
+            
+            _logger.LogInformation("Found {Count} HabxRes records for room {Id}", 
+                habxresHabitacion.Count, idHabitacion);
+            
+            // Crear índice de reservas por IdReserva
+            var reservasDict = reservas.ToDictionary(r => r.IdReserva, r => r);
             
             var fechasOcupadas = new HashSet<string>();
             
-            foreach (var reserva in reservas)
+            // Procesar solo las reservas que tienen esta habitación
+            foreach (var idReserva in habxresHabitacion)
             {
-                // Verificar que tengamos HabxRes para esta reserva
-                if (!habxresDict.TryGetValue(reserva.IdReserva, out var habxresItem))
+                // Verificar que la reserva exista
+                if (!reservasDict.TryGetValue(idReserva, out var reserva))
+                {
+                    _logger.LogWarning("Reservation {Id} not found for HabxRes", idReserva);
                     continue;
-                
-                // Verificar que sea la habitación correcta
-                if (habxresItem.IdHabitacion != idHabitacion)
-                    continue;
+                }
                 
                 // Excluir reservas canceladas o expiradas
                 var estado = (reserva.EstadoGeneral ?? "").Trim().ToUpper();
                 if (estado.Contains("CANCELADA") || estado.Contains("EXPIRADO"))
+                {
+                    _logger.LogDebug("Skipping reservation {Id} with state {Estado}", idReserva, estado);
                     continue;
+                }
                 
                 // Generar todas las fechas del rango
                 if (!string.IsNullOrEmpty(reserva.FechaInicio) && !string.IsNullOrEmpty(reserva.FechaFinal))
@@ -395,6 +407,14 @@ public class ReservasGrpcGatewayController : ControllerBase
                         {
                             fechasOcupadas.Add(d.ToString("yyyy-MM-dd"));
                         }
+                        
+                        _logger.LogDebug("Added dates from {Start} to {End} for reservation {Id}", 
+                            inicio.Date, fin.Date, idReserva);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to parse dates for reservation {Id}: {Start} - {End}", 
+                            idReserva, reserva.FechaInicio, reserva.FechaFinal);
                     }
                 }
             }
