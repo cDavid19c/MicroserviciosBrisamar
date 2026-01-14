@@ -1,3 +1,5 @@
+
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Data;
@@ -46,8 +48,14 @@ public class UsuariosController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<UsuarioInternoDto>> Create([FromBody] UsuarioInternoDto dto)
     {
+        // Hash the password before saving
+        if (!string.IsNullOrEmpty(dto.Clave))
+        {
+            dto.Clave = HashPassword(dto.Clave);
+        }
+
         var result = await _repository.CrearAsync(dto);
-        
+
         await _eventBus.PublishAsync(new UsuarioCreatedEvent
         {
             IdUsuario = result.Id,
