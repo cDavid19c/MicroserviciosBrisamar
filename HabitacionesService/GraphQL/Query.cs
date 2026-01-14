@@ -20,6 +20,32 @@ public class Query
     public async Task<IEnumerable<HabitacionDto>> GetHabitacionesPorHotel([Service] HabitacionRepository repo, int idHotel)
         => await repo.ObtenerPorHotelAsync(idHotel);
 
+    // ============ RESOLVERS PARA NAVEGACIÓN ============
+    
+    /// <summary>
+    /// Resuelve la propiedad 'hotel' para HabitacionDto
+    /// </summary>
+    public async Task<HotelDto?> GetHotel(
+        [Parent] HabitacionDto habitacion,
+        [Service] HotelRepository hotelRepo)
+        => await hotelRepo.ObtenerPorIdAsync(habitacion.IdHotel);
+
+    /// <summary>
+    /// Resuelve la propiedad 'ciudad' para HabitacionDto
+    /// </summary>
+    public async Task<CiudadDto?> GetCiudad(
+        [Parent] HabitacionDto habitacion,
+        [Service] CiudadRepository ciudadRepo)
+        => await ciudadRepo.ObtenerPorIdAsync(habitacion.IdCiudad);
+
+    /// <summary>
+    /// Resuelve la propiedad 'imagenes' para HabitacionDto
+    /// </summary>
+    public async Task<IEnumerable<ImagenHabitacionDto>> GetImagenes(
+        [Parent] HabitacionDto habitacion,
+        [Service] ImagenHabitacionRepository imagenRepo)
+        => await imagenRepo.ObtenerPorHabitacionAsync(habitacion.IdHabitacion);
+
     // ============ IMÁGENES HABITACIÓN ============
 
     public async Task<IEnumerable<ImagenHabitacionDto>> GetImagenesHabitacion([Service] ImagenHabitacionRepository repo)

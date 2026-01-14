@@ -54,6 +54,8 @@ builder.Services.AddScoped<HabitacionRepository>();
 builder.Services.AddScoped<ImagenHabitacionRepository>();
 builder.Services.AddScoped<AmexHabRepository>();
 builder.Services.AddScoped<DescuentoRepository>();
+builder.Services.AddScoped<HotelRepository>();
+builder.Services.AddScoped<CiudadRepository>();
 
 //
 // =======================

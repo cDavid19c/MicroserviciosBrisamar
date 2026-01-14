@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
 using UsuariosPagosService.Repositories;
+using Microsoft.Data.SqlClient;
 
 namespace UsuariosPagosService.Controllers;
 
@@ -9,10 +10,14 @@ namespace UsuariosPagosService.Controllers;
 public class FuncionesEspecialesController : ControllerBase
 {
     private readonly FuncionesEspecialesRepository _repository;
+    private readonly ILogger<FuncionesEspecialesController> _logger;
 
-    public FuncionesEspecialesController(FuncionesEspecialesRepository repository)
+    public FuncionesEspecialesController(
+        FuncionesEspecialesRepository repository,
+        ILogger<FuncionesEspecialesController> logger)
     {
         _repository = repository;
+        _logger = logger;
     }
 
     // ============================================================
@@ -92,6 +97,10 @@ public class FuncionesEspecialesController : ControllerBase
             string.IsNullOrWhiteSpace(request.Correo))
             return BadRequest("IdHabitacion, IdHold y Correo son obligatorios.");
 
+        _logger.LogInformation(
+            "Intentando confirmar reserva - IdHold: {IdHold}, IdHabitacion: {IdHabitacion}, Correo: {Correo}, FechaInicio: {FechaInicio}, FechaFin: {FechaFin}",
+            request.IdHold, request.IdHabitacion, request.Correo, request.FechaInicio, request.FechaFin);
+
         try
         {
             var result = _repository.ConfirmarReservaUsuarioInterno(
@@ -108,13 +117,50 @@ public class FuncionesEspecialesController : ControllerBase
             );
 
             if (result == null)
-                return NotFound("No se pudo confirmar la reserva.");
+            {
+                _logger.LogWarning(
+                    "No se pudo confirmar la reserva - IdHold: {IdHold}, IdHabitacion: {IdHabitacion}",
+                    request.IdHold, request.IdHabitacion);
+                return NotFound("No se pudo confirmar la reserva. El hold puede haber expirado o no existe.");
+            }
+
+            _logger.LogInformation(
+                "Reserva confirmada exitosamente - IdReserva: {IdReserva}, IdHold: {IdHold}",
+                result.IdReserva, request.IdHold);
 
             return Ok(result);
         }
+        catch (SqlException sqlEx)
+        {
+            _logger.LogError(sqlEx,
+                "Error SQL al confirmar reserva - IdHold: {IdHold}, IdHabitacion: {IdHabitacion}, SqlError: {SqlError}",
+                request.IdHold, request.IdHabitacion, sqlEx.Message);
+
+            return Problem(
+                title: "Error de base de datos",
+                detail: $"No se pudo confirmar la reserva debido a un error en la base de datos. Por favor, contacte al administrador. Error: {sqlEx.Message}",
+                statusCode: 500
+            );
+        }
+        catch (ArgumentException argEx)
+        {
+            _logger.LogWarning(argEx,
+                "Validación fallida al confirmar reserva - IdHold: {IdHold}, Error: {Error}",
+                request.IdHold, argEx.Message);
+
+            return BadRequest(argEx.Message);
+        }
         catch (Exception ex)
         {
-            return Problem(ex.Message);
+            _logger.LogError(ex,
+                "Error inesperado al confirmar reserva - IdHold: {IdHold}, IdHabitacion: {IdHabitacion}",
+                request.IdHold, request.IdHabitacion);
+
+            return Problem(
+                title: "Error interno del servidor",
+                detail: $"Ocurrió un error inesperado al confirmar la reserva. Error: {ex.Message}",
+                statusCode: 500
+            );
         }
     }
 

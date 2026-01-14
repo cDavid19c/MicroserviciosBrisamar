@@ -133,6 +133,12 @@ public class FuncionesEspecialesRepository
     {
         ValidarFechas(fechaInicio, fechaFin);
 
+        // Validar que el hold existe antes de intentar confirmar
+        if (!ValidarHoldExiste(idHold))
+        {
+            throw new ArgumentException($"El hold '{idHold}' no existe o ha expirado.");
+        }
+
         using var cn = new SqlConnection(_connectionString);
         using var cmd = new SqlCommand("dbo.sp_reservarHabitacionUsuarioInterno", cn)
         {
@@ -150,29 +156,70 @@ public class FuncionesEspecialesRepository
         cmd.Parameters.Add("@FECHA_FIN", SqlDbType.DateTime).Value = fechaFin;
         cmd.Parameters.Add("@NUMERO_HUESPEDES", SqlDbType.Int).Value = numeroHuespedes;
 
-        cn.Open();
-        using var rd = cmd.ExecuteReader();
-
-        if (!rd.Read()) return null;
-
-        return new ReservaConfirmadaDto
+        try
         {
-            IdReserva = rd.GetInt32(rd.GetOrdinal("ID_RESERVA")),
-            CostoTotalReserva = GetDecimal(rd, "COSTO_TOTAL_RESERVA"),
-            FechaRegistro = GetDateTime(rd, "FECHA_REGISTRO_RESERVA"),
-            FechaInicio = GetDateTime(rd, "FECHA_INICIO_RESERVA"),
-            FechaFin = GetDateTime(rd, "FECHA_FINAL_RESERVA"),
-            EstadoGeneral = GetString(rd, "ESTADO_GENERAL_RESERVA"),
-            Estado = GetBool(rd, "ESTADO_RESERVA"),
-            Nombre = GetString(rd, "NOMBRE_USUARIO"),
-            Apellido = GetString(rd, "APELLIDO_USUARIO"),
-            Correo = GetString(rd, "EMAIL_USUARIO"),
-            TipoDocumento = GetString(rd, "TIPO_DOCUMENTO_USUARIO"),
-            Habitacion = GetString(rd, "NOMBRE_HABITACION"),
-            PrecioNormal = GetDecimal(rd, "PRECIO_NORMAL_HABITACION"),
-            PrecioActual = GetDecimal(rd, "PRECIO_ACTUAL_HABITACION"),
-            Capacidad = GetInt(rd, "CAPACIDAD_HABITACION")
-        };
+            cn.Open();
+            using var rd = cmd.ExecuteReader();
+
+            if (!rd.Read())
+            {
+                throw new Exception("El stored procedure no retornó ningún resultado. Verifique que el hold sea válido.");
+            }
+
+            return new ReservaConfirmadaDto
+            {
+                IdReserva = rd.GetInt32(rd.GetOrdinal("ID_RESERVA")),
+                CostoTotalReserva = GetDecimal(rd, "COSTO_TOTAL_RESERVA"),
+                FechaRegistro = GetDateTime(rd, "FECHA_REGISTRO_RESERVA"),
+                FechaInicio = GetDateTime(rd, "FECHA_INICIO_RESERVA"),
+                FechaFin = GetDateTime(rd, "FECHA_FINAL_RESERVA"),
+                EstadoGeneral = GetString(rd, "ESTADO_GENERAL_RESERVA"),
+                Estado = GetBool(rd, "ESTADO_RESERVA"),
+                Nombre = GetString(rd, "NOMBRE_USUARIO"),
+                Apellido = GetString(rd, "APELLIDO_USUARIO"),
+                Correo = GetString(rd, "EMAIL_USUARIO"),
+                TipoDocumento = GetString(rd, "TIPO_DOCUMENTO_USUARIO"),
+                Habitacion = GetString(rd, "NOMBRE_HABITACION"),
+                PrecioNormal = GetDecimal(rd, "PRECIO_NORMAL_HABITACION"),
+                PrecioActual = GetDecimal(rd, "PRECIO_ACTUAL_HABITACION"),
+                Capacidad = GetInt(rd, "CAPACIDAD_HABITACION")
+            };
+        }
+        catch (SqlException sqlEx)
+        {
+            // Proporcionar mensajes más específicos según el error SQL
+            if (sqlEx.Number == 2627 || sqlEx.Number == 2601) // Violación de clave única
+            {
+                throw new Exception("Ya existe una reserva con estos datos.", sqlEx);
+            }
+            else if (sqlEx.Number == 547) // Violación de clave foránea
+            {
+                throw new Exception("Los datos proporcionados no son válidos (habitación o hold no existe).", sqlEx);
+            }
+            else
+            {
+                throw new Exception($"Error en la base de datos al confirmar la reserva: {sqlEx.Message}", sqlEx);
+            }
+        }
+    }
+
+    // ============================================================
+    // VALIDAR SI UN HOLD EXISTE Y ESTÁ ACTIVO
+    // ============================================================
+    private bool ValidarHoldExiste(string idHold)
+    {
+        using var cn = new SqlConnection(_connectionString);
+        using var cmd = new SqlCommand(@"
+            SELECT COUNT(1)
+            FROM HOLD
+            WHERE ID_HOLD = @ID_HOLD
+        ", cn);
+
+        cmd.Parameters.Add("@ID_HOLD", SqlDbType.Char, 10).Value = idHold;
+
+        cn.Open();
+        var count = (int)cmd.ExecuteScalar();
+        return count > 0;
     }
 
     // ============================================================
